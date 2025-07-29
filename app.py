@@ -142,6 +142,7 @@ async def track_interaction(event: InteractionEvent):
     Track user interaction with movies
     """
     try:
+        print(f"Tracking interaction: {event}")
         # Get reference to interactions collection
         interactions_ref = db.reference('interactions')
         
