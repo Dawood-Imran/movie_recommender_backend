@@ -6,10 +6,21 @@ from typing import List, Dict
 # Third-party imports
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import requests
 import firebase_admin
 from firebase_admin import credentials, firestore, db
 from dotenv import load_dotenv
+
+# Pydantic Models
+class EventData(BaseModel):
+    movie_id: int
+
+class InteractionEvent(BaseModel):
+    user_id: str
+    event_type: str
+    event_data: EventData
+    timestamp: str
 
 # Load environment variables
 load_dotenv()
@@ -125,7 +136,37 @@ async def get_trending_movies():
     """
     return await get_cached_trending_movies()
 
-
+@app.post("/track")
+async def track_interaction(event: InteractionEvent):
+    """
+    Track user interaction with movies
+    """
+    try:
+        # Get reference to interactions collection
+        interactions_ref = db.reference('interactions')
+        
+        # Create a new interaction document
+        interaction_data = {
+            "user_id": event.user_id,
+            "event_type": event.event_type,
+            "event_data": event.event_data.dict(),
+            "timestamp": event.timestamp,
+            "created_at": datetime.now().isoformat()  # Server timestamp
+        }
+        
+        # Push the data to Firebase (this creates a unique key)
+        new_interaction = interactions_ref.push(interaction_data)
+        
+        return {
+            "status": "success",
+            "message": "Interaction tracked successfully",
+            "interaction_id": new_interaction.key
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error tracking interaction: {str(e)}"
+        )
 
 
 # Initialize Firebase on startup
