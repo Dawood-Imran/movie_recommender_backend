@@ -2,7 +2,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import List, Dict
-
+import uvicorn
 # Third-party imports
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -174,5 +174,6 @@ async def track_interaction(event: InteractionEvent):
 init_firebase()
      
 
- 
-
+if __name__ == "__main__":
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
